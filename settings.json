@@ -1,0 +1,13 @@
+{
+    "window": {
+        "height": 500,
+        "width": 1000,
+        "fps": 30,
+        "fullscreen": false,
+        "native_res": false
+    },
+    "font": {
+        "ppcm": 45,
+        "font": "assets/fonts/DisposableDroidBB.ttf"
+    }
+}
