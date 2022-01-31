@@ -3,6 +3,7 @@
 import json
 import time
 from typing import List, Tuple
+from black import os
 
 import pygame
 import pygame.mixer
@@ -55,6 +56,8 @@ class TextButton:
         padding_h=20,
         padding_w=30,
         event=None,
+        centering: bool = True,
+        bottom_aligned: bool = False,
     ):
         self.text_normal = font.render(text, False, (hover_color))
         self.text_hover = font.render(text, False, color)
@@ -63,8 +66,21 @@ class TextButton:
         self.outer_rect = self.text_normal.get_rect()
         self.outer_rect.width += padding_w
         self.outer_rect.height += padding_h
+        if invis_width == 0:
+            invis_width = self.outer_rect.width + dest[0] * 2
         self.outer_outer_rect = pygame.Rect(
-            (0, dest[1] - self.outer_rect.h // 2), (invis_width, self.outer_rect.height)
+            (
+                0,
+                dest[1]
+                - (
+                    (self.outer_rect.h // 2)
+                    if centering
+                    else self.outer_rect.h
+                    if bottom_aligned
+                    else 0
+                ),
+            ),
+            (invis_width, self.outer_rect.height),
         )
         self.outer_rect.center = self.outer_outer_rect.center
         self.rect.center = self.outer_rect.center
@@ -88,6 +104,7 @@ class TextButton:
         self.mouse_hover(x, y)
         if not mouse and self.hover and self.event_bind is not None:
             self.event_bind()
+            self.hover = False
 
     def mouse_hover(self, x: int, y: int):
         if self.outer_rect.collidepoint(x, y):
@@ -132,10 +149,23 @@ def load_sprite_sheet(frame_size: Tuple[int, int], file: str) -> List[pygame.Sur
     return frames
 
 
+class GameSave:
+    def __init__(self):
+        home = os.path.expanduser("~/.config/progventures")
+        os.makedirs(home, exist_ok=True)
+        if not os.path.exists(home + "/gamesave.json"):
+            with open(home + "/gamesave.json", "w") as file:
+                json.dump({"unlock_level": 0}, file)
+        with open(home + "/gamesave.json", "r") as file:
+            info = json.load(file)
+            self.unlock_level = info["unlock_level"]
+
+
 class Game:
     def __init__(
         self, window: pygame.Surface, fps: int, ppcm: int, font: str
     ):  # This is where all the assets are really loaded. Too long for a init function
+        self.gamesave = GameSave()
         self.window = window
         self.font = font
         self.window.fill((0, 0, 0))
@@ -163,9 +193,13 @@ class Game:
 
         self.scene = "mainmenu"
         self.cursor_state = "up"
+        self.running = False
 
         def evt_start():
             self.scene = "stageselect"
+
+        def evt_quit():
+            self.running = False
 
         # Component Main Menu
         self.mainmenu_buttons = {
@@ -215,6 +249,17 @@ class Game:
                     (self.height // 2.5) + 3 * (ppcm + int(0.1 * ppcm)),
                 ),
                 padding_h=0,
+            ),
+            "quit": TextButton(
+                "Quit",
+                self.text_renderer,
+                invis_width=self.width,
+                dest=(
+                    self.width // 2,
+                    (self.height // 2.5) + 4 * (ppcm + int(0.1 * ppcm)),
+                ),
+                padding_h=0,
+                event=evt_quit,
             ),
         }
         self.version_text = self.text_rendererh2.render(
@@ -464,6 +509,32 @@ Weakness: {nl+nl.join(info["weakness"])}"""
 
             self.logo_frames.append(frame)
 
+        # Stageselect Controls notifier
+        self.controls_text = self.text_renderer.render("<-", False, (255, 255, 255))
+        self.controls_text2 = self.text_renderer.render("->", False, (255, 255, 255))
+        self.controls_text2_rect = self.controls_text2.get_rect()
+        self.controls_text2_rect.bottomright = (self.width - 10, self.height - 10)
+        self.controls_text_rect = self.controls_text.get_rect()
+        self.controls_text_rect.bottomleft = (
+            self.controls_text2_rect.left - 60,
+            self.height - 10,
+        )
+
+        # Stageselect back to main menu
+        def evt_main_menu():
+            self.scene = "mainmenu"
+
+        self.stageselect_back = TextButton(
+            "Back",
+            self.text_renderer,
+            dest=(10, self.height - 10),
+            padding_h=0,
+            padding_w=10,
+            centering=False,
+            bottom_aligned=True,
+            event=evt_main_menu,
+        )
+
         # End of loading
         time.sleep(2)
         pygame.mixer.music.pause()
@@ -478,17 +549,17 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         pygame.mixer.music.play(-1)
         pygame.mouse.set_visible(False)
 
-        running = True
-        while running:
+        self.running = True
+        while self.running:
             self.window.fill((0, 0, 0))
             for x in pygame.event.get():
                 if x.type == pygame.QUIT:
-                    running = False
+                    self.running = False
                 elif x.type == pygame.KEYUP:
                     if (
                         x.key == pygame.K_q and pygame.key.get_mods() & pygame.KMOD_CTRL
                     ):  # Ctrl-Q
-                        running = False
+                        self.running = False
                     if x.key == pygame.K_RIGHT and self.scene == "stageselect":
                         self.current_logo_index += 1
                         if self.current_logo_index == len(self.logos):
@@ -530,14 +601,37 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         if self.scene == "mainmenu":
             for v in self.mainmenu_buttons.values():
                 v.mouse_button(x, y, down)
+        if (
+            self.scene == "stageselect"
+            and not down
+            and self.controls_text_rect.collidepoint(x, y)
+        ):
+            self.current_logo_index -= 1
+            if self.current_logo_index < 0:
+                self.current_logo_index = len(self.logos) - 1
+        if (
+            self.scene == "stageselect"
+            and not down
+            and self.controls_text2_rect.collidepoint(x, y)
+        ):
+            self.current_logo_index += 1
+            if self.current_logo_index == len(self.logos):
+                self.current_logo_index = 0
+        if self.scene == "stageselect":
+            self.stageselect_back.mouse_button(x, y, down)
 
     def handle_hover(self, x, y):
         if self.scene == "mainmenu":
             for v in self.mainmenu_buttons.values():
                 v.mouse_hover(x, y)
+        if self.scene == "stageselect":
+            self.stageselect_back.mouse_hover(x, y)
 
     def render_stageselect_frame(self):
         self.window.blit(self.logo_frames[self.current_logo_index], (0, 0))
+        self.window.blit(self.controls_text, self.controls_text_rect)
+        self.window.blit(self.controls_text2, self.controls_text2_rect)
+        self.stageselect_back.render(self.window)
 
     def render_mainmenu_frame(self):
         for v in self.mainmenu_buttons.values():
