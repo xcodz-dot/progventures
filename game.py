@@ -277,6 +277,10 @@ class Game:
 
         # Logo Setup # Scene "stageselect"
         logos = load_sprite_sheet((32, 32), "assets/images/logo.png")
+        self.logo_locked = pygame.transform.scale(
+            pygame.image.load("assets/images/locked.png"),
+            (int(0.3 * self.height), int(0.3 * self.height)),
+        )
         self.logo_names = logo_names = [
             "helios",
             "dos",
@@ -302,7 +306,7 @@ class Game:
                 "security-measures": ["Null"],
                 "isa": ["Base"],
                 "weakness": ["Buffer Overflow", "Fibinocci Password"],
-                "owner": "???",
+                "owner": "Unknown",
             },  # Helios 1.0
             "dos": {
                 "company": "MicroSoft",
@@ -316,7 +320,7 @@ class Game:
                     "CipherBased Password",
                     "Disk Unencrypted",
                 ],
-                "owner": "???",
+                "owner": "Unknown",
             },  # MS DOS
             "win95": {
                 "company": "MicroSoft",
@@ -472,13 +476,12 @@ class Game:
             frame.blit(self.logos[i], self.logo_visible_rect)
             pygame.draw.rect(frame, (255, 255, 255), self.logo_visible_bound_rect, 1)
             info = x
-            owner = Label(
+            info["owner"] = Label(
                 info["owner"],
                 self.text_renderer,
                 invis_width=self.width,
                 dest=(0, self.logo_visible_bound_rect.top - self.ppcm + 20),
             )
-            owner.render(frame)
             nl = "\n\t* "
             info_to_show = f"""Company: {info["company"]}
 Release: {info["year"]}
@@ -524,6 +527,12 @@ Weakness: {nl+nl.join(info["weakness"])}"""
 
             self.logo_frames.append(frame)
 
+        self.unknown_owner = Label(
+            "???",
+            self.text_renderer,
+            invis_width=self.width,
+            dest=(0, self.logo_visible_bound_rect.top - self.ppcm + 20),
+        )
         # Stageselect Controls notifier
         self.controls_text = self.text_renderer.render("<-", False, (255, 255, 255))
         self.controls_text2 = self.text_renderer.render("->", False, (255, 255, 255))
@@ -646,6 +655,13 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         self.window.blit(self.logo_frames[self.current_logo_index], (0, 0))
         self.window.blit(self.controls_text, self.controls_text_rect)
         self.window.blit(self.controls_text2, self.controls_text2_rect)
+        if self.gamesave.unlock_level < self.current_logo_index:
+            self.unknown_owner.render(self.window)
+            self.window.blit(self.logo_locked, self.logo_visible_rect)
+        else:
+            self.logo_information[self.logo_names[self.current_logo_index]][
+                "owner"
+            ].render(self.window)
         self.stageselect_back.render(self.window)
 
     def render_mainmenu_frame(self):
