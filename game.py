@@ -10,6 +10,18 @@ import pygame.mixer
 
 __version__ = "1.0.0"
 
+lang = "en-gb"
+itable = {}
+
+# Internationalization
+def gm(msg: str) -> str:
+    return itable[msg]
+
+def reload():
+    global itable
+    with open(f"assets/locales/{lang.split('-')[0]}/{lang.split('-')[1]}.json") as file:
+        itable = json.load(file)
+
 
 def analyze(asm: str) -> dict:
     """
