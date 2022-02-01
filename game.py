@@ -188,6 +188,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.ppcm = ppcm
+        self.text_rendererx1_5 = pygame.font.Font(font, int(ppcm * 1.5))
         self.text_rendererx3 = pygame.font.Font(font, ppcm * 3)
         self.text_rendererh2 = pygame.font.Font(font, ppcm // 2)
 
@@ -562,6 +563,18 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             event=evt_main_menu,
         )
 
+        self.stageselect_enter = TextButton(
+            "Enter",
+            self.text_rendererx1_5,
+            padding_h=0,
+            padding_w=10,
+            invis_width=self.width,
+            event=evt_levelsel,
+            dest=(0, self.height - 10),
+            bottom_aligned=True,
+            centering=False
+        )
+
         # Levelsel (LevelSelect specific stuff)
         def evt_stage_select():
             self.scene = "stageselect"
@@ -665,6 +678,11 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.current_logo_index += 1
             if self.current_logo_index == len(self.logos):
                 self.current_logo_index = 0
+        elif (
+            self.scene == "stageselect"
+            and self.current_logo_index <= self.gamesave.unlock_level
+        ):
+            self.stageselect_enter.mouse_button(x, y, down)
         elif self.scene == "stageselect":
             self.stageselect_back.mouse_button(x, y, down)
         elif self.scene == "levelsel":
@@ -676,6 +694,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
                 v.mouse_hover(x, y)
         elif self.scene == "stageselect":
             self.stageselect_back.mouse_hover(x, y)
+            self.stageselect_enter.mouse_hover(x, y)
         elif self.scene == "levelsel":
             self.levelsel_back.mouse_hover(x, y)
 
@@ -690,6 +709,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.logo_information[self.logo_names[self.current_logo_index]][
                 "owner"
             ].render(self.window)
+            self.stageselect_enter.render(self.window)
         self.stageselect_back.render(self.window)
 
     def render_levelselect_frame(self):
