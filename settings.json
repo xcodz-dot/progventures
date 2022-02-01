@@ -8,6 +8,10 @@
     },
     "font": {
         "ppcm": 45,
-        "font": "assets/fonts/DisposableDroidBB.ttf"
+        "font": "assets/fonts/DisposableDroidBB.ttf",
+        "antialias": false
+    },
+    "locales": {
+        "lang": "en-gb"
     }
 }

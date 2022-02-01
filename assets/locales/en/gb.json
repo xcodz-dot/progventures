@@ -1,4 +1,5 @@
 {
+    "Sample Text": "A|`1_,gpqrst^zxyz.:;",
     "Progventures": "Progventures",
     "Start": "Start",
     "About": "About",
@@ -13,5 +14,7 @@
     "Security Measures": "Security Measures",
     "Weakness": "Weakness",
     "Back": "Back",
-    "Enter": "Enter"
+    "Enter": "Enter",
+    "Booting": "Booting",
+    "Company": "Company"
 }

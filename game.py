@@ -12,13 +12,17 @@ __version__ = "1.0.0"
 
 lang = "en-gb"
 itable = {}
+aa = False
 
 # Internationalization
 def gm(msg: str) -> str:
     return itable[msg]
 
+
 def reload():
-    global itable
+    global itable, lang
+    if len(lang.split("-")) < 2:
+        lang += "-base"
     with open(f"assets/locales/{lang.split('-')[0]}/{lang.split('-')[1]}.json") as file:
         itable = json.load(file)
 
@@ -71,8 +75,8 @@ class TextButton:
         centering: bool = True,
         bottom_aligned: bool = False,
     ):
-        self.text_normal = font.render(text, False, (hover_color))
-        self.text_hover = font.render(text, False, color)
+        self.text_normal = font.render(text, aa, (hover_color))
+        self.text_hover = font.render(text, aa, color)
         self.mouse_down = False
         self.rect = self.text_normal.get_rect()
         self.outer_rect = self.text_normal.get_rect()
@@ -134,7 +138,7 @@ class Label:
         invis_width=0,
         dest=(0, 0),
     ):
-        self.text_normal = font.render(text, False, color)
+        self.text_normal = font.render(text, aa, color)
         self.rect = self.text_normal.get_rect()
         self.outer_rect = pygame.Rect(0, dest[1] - self.rect.h // 2, invis_width, 0)
         self.rect.center = self.outer_rect.center
@@ -175,15 +179,18 @@ class GameSave:
 
 class Game:
     def __init__(
-        self, window: pygame.Surface, fps: int, ppcm: int, font: str
+        self, window: pygame.Surface, fps: int, ppcm: int, font: str, antialias: bool
     ):  # This is where all the assets are really loaded. Too long for a init function
+        global aa
+        self.font_size = guess_font_size(ppcm, gm("Sample Text"), font)
         self.gamesave = GameSave()
         self.window = window
         self.font = font
         self.window.fill((0, 0, 0))
-        self.text_renderer = pygame.font.Font(font, ppcm)
+        self.text_renderer = pygame.font.Font(font, self.font_size)
+        aa = antialias
 
-        loading_text = self.text_renderer.render("Booting", False, (255, 255, 255))
+        loading_text = self.text_renderer.render(gm("Booting"), aa, (255, 255, 255))
         loading_text_rect = loading_text.get_rect()
         loading_text_rect.center = self.window.get_rect().center
 
@@ -200,9 +207,9 @@ class Game:
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.ppcm = ppcm
-        self.text_rendererx1_5 = pygame.font.Font(font, int(ppcm * 1.5))
-        self.text_rendererx3 = pygame.font.Font(font, ppcm * 3)
-        self.text_rendererh2 = pygame.font.Font(font, ppcm // 2)
+        self.text_rendererx1_5 = pygame.font.Font(font, int(self.font_size * 1.5))
+        self.text_rendererx3 = pygame.font.Font(font, self.font_size * 3)
+        self.text_rendererh2 = pygame.font.Font(font, self.font_size // 2)
 
         self.scene = "mainmenu"
         self.cursor_state = "up"
@@ -217,13 +224,13 @@ class Game:
         # Component Main Menu
         self.mainmenu_buttons = {
             "label": Label(
-                "Progventures",
+                gm("Progventures"),
                 self.text_rendererx3,
                 invis_width=self.width,
                 dest=(0, (self.height // 3)),
             ),
             "start": TextButton(
-                "Start",
+                gm("Start"),
                 self.text_renderer,
                 invis_width=self.width,
                 dest=(
@@ -234,7 +241,7 @@ class Game:
                 event=evt_start,
             ),
             "about": TextButton(
-                "About",
+                gm("About"),
                 self.text_renderer,
                 invis_width=self.width,
                 dest=(
@@ -244,7 +251,7 @@ class Game:
                 padding_h=0,
             ),
             "tutorial": TextButton(
-                "Tutorial",
+                gm("Tutorial"),
                 self.text_renderer,
                 invis_width=self.width,
                 dest=(
@@ -254,7 +261,7 @@ class Game:
                 padding_h=0,
             ),
             "help": TextButton(
-                "Help",
+                gm("Help"),
                 self.text_renderer,
                 invis_width=self.width,
                 dest=(
@@ -264,7 +271,7 @@ class Game:
                 padding_h=0,
             ),
             "quit": TextButton(
-                "Quit",
+                gm("Quit"),
                 self.text_renderer,
                 invis_width=self.width,
                 dest=(
@@ -276,7 +283,7 @@ class Game:
             ),
         }
         self.version_text = self.text_rendererh2.render(
-            "v" + __version__, False, (255, 255, 255)
+            "v" + __version__, aa, (255, 255, 255)
         )
         self.version_text_rect = self.version_text.get_rect()
         self.version_text_rect.bottomright = (self.width - 1, self.height - 1)
@@ -471,9 +478,9 @@ class Game:
         self.current_logo_index = 0
         self.logo_frames = []
 
-        self.info_text = self.text_renderer.render("OS Info", False, (255, 255, 255))
+        self.info_text = self.text_renderer.render(gm("OS Info"), aa, (255, 255, 255))
         self.target_environment = self.text_renderer.render(
-            "Target", False, (255, 255, 255)
+            gm("Target"), aa, (255, 255, 255)
         )
         self.target_environment_rect = self.target_environment.get_rect()
         self.target_environment_rect.topright = (self.width - 10, 10)
@@ -495,16 +502,16 @@ class Game:
                 invis_width=self.width,
                 dest=(0, self.logo_visible_bound_rect.top - self.ppcm + 20),
             )
-            nl = "\n\t* "
-            info_to_show = f"""Company: {info["company"]}
-Release: {info["year"]}
-Name: {info["name"]}
+            nl = "\n    * "
+            info_to_show = f"""{gm("Company")}: {info["company"]}
+{gm("Release")}: {info["year"]}
+{gm("Name")}: {info["name"]}
 
-Security Level: [{('='*int(info["security-level"])).ljust(10)}]
-Security Measures:{nl+nl.join(info["security-measures"])}"""
+{gm("Security Level")}: [{('='*int(info["security-level"])).ljust(10)}]
+{gm("Security Measures")}:{nl+nl.join(info["security-measures"])}"""
             info2 = f"""ISA: {nl+nl.join(info["isa"])}
 
-Weakness: {nl+nl.join(info["weakness"])}"""
+{gm("Weakness")}: {nl+nl.join(info["weakness"])}"""
             info2 = info2.splitlines()
             surf2 = pygame.Surface((self.width, self.height))
             info_to_show = info_to_show.splitlines()
@@ -513,7 +520,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             for line in info_to_show:
                 surf = self.text_rendererh2.render(
                     line,
-                    False,
+                    aa,
                     (255, 255, 255),
                 )
                 frame.blit(surf, (20, h + self.ppcm + 10))
@@ -525,7 +532,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             h = 0
             max_w = 0
             for line in info2:
-                surf = self.text_rendererh2.render(line, False, (255, 255, 255))
+                surf = self.text_rendererh2.render(line, aa, (255, 255, 255))
                 surf2.blit(surf, (0, h))
                 h += surf.get_height()
                 max_w = max(max_w, surf.get_width())
@@ -547,8 +554,8 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             dest=(0, self.logo_visible_bound_rect.top - self.ppcm + 20),
         )
         # Stageselect Controls notifier
-        self.controls_text = self.text_renderer.render("<-", False, (255, 255, 255))
-        self.controls_text2 = self.text_renderer.render("->", False, (255, 255, 255))
+        self.controls_text = self.text_renderer.render("<-", aa, (255, 255, 255))
+        self.controls_text2 = self.text_renderer.render("->", aa, (255, 255, 255))
         self.controls_text2_rect = self.controls_text2.get_rect()
         self.controls_text2_rect.bottomright = (self.width - 10, self.height - 10)
         self.controls_text_rect = self.controls_text.get_rect()
@@ -565,7 +572,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.scene = "levelsel"
 
         self.stageselect_back = TextButton(
-            "Back",
+            gm("Back"),
             self.text_renderer,
             dest=(10, self.height - 10),
             padding_h=0,
@@ -576,7 +583,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         )
 
         self.stageselect_enter = TextButton(
-            "Enter",
+            gm("Enter"),
             self.text_rendererx1_5,
             padding_h=0,
             padding_w=10,
@@ -592,7 +599,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.scene = "stageselect"
 
         self.levelsel_back = TextButton(
-            "Back",
+            gm("Back"),
             self.text_renderer,
             dest=(10, self.height - 10),
             padding_h=0,
@@ -727,7 +734,16 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         self.window.blit(self.version_text, self.version_text_rect)
 
 
+def guess_font_size(ppcm: int, sample_text: str, font: str) -> int:
+    for x in range(ppcm, 0, -1):
+        r = pygame.font.Font(font, x)
+        s = r.render(sample_text, False, (255, 255, 255), (0, 0, 0))
+        if s.get_height() <= ppcm:
+            return x
+
+
 def main():
+    global lang
     pygame.init()
     with open("settings.json") as f:
         settings = json.load(f)
@@ -742,12 +758,15 @@ def main():
         (settings["window"]["width"], settings["window"]["height"]), flags
     )
     pygame.display.set_caption("Progventures", "Progventures")
+    lang = settings["locales"]["lang"]
+    reload()
 
     game = Game(
         window,
         settings["window"]["fps"],
         settings["font"]["ppcm"],
         settings["font"]["font"],
+        settings["font"]["antialias"],
     )
     game.start()
 
