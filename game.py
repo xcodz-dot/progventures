@@ -548,6 +548,9 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         def evt_main_menu():
             self.scene = "mainmenu"
 
+        def evt_levelsel():  # TODO Make enter button
+            self.scene = "levelsel"
+
         self.stageselect_back = TextButton(
             "Back",
             self.text_renderer,
@@ -557,6 +560,21 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             centering=False,
             bottom_aligned=True,
             event=evt_main_menu,
+        )
+
+        # Levelsel (LevelSelect specific stuff)
+        def evt_stage_select():
+            self.scene = "stageselect"
+
+        self.levelsel_back = TextButton(
+            "Back",
+            self.text_renderer,
+            dest=(10, self.height - 10),
+            padding_h=0,
+            padding_w=10,
+            centering=False,
+            bottom_aligned=True,
+            event=evt_stage_select,
         )
 
         # End of loading
@@ -592,6 +610,10 @@ Weakness: {nl+nl.join(info["weakness"])}"""
                         self.current_logo_index -= 1
                         if self.current_logo_index < 0:
                             self.current_logo_index = len(self.logos) - 1
+                    if (
+                        x.key == pygame.K_RETURN or x.key == pygame.K_KP_ENTER
+                    ) and self.scene == "stageselect":
+                        self.scene = "levelsel"
                 elif x.type == pygame.MOUSEMOTION:
                     x, y = x.pos
                     self.handle_hover(x, y)
@@ -620,12 +642,14 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.render_mainmenu_frame()
         elif self.scene == "stageselect":
             self.render_stageselect_frame()
+        elif self.scene == "levelsel":
+            self.render_levelselect_frame()
 
     def handle_mouse(self, x, y, down):
         if self.scene == "mainmenu":
             for v in self.mainmenu_buttons.values():
                 v.mouse_button(x, y, down)
-        if (
+        elif (
             self.scene == "stageselect"
             and not down
             and self.controls_text_rect.collidepoint(x, y)
@@ -633,7 +657,7 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.current_logo_index -= 1
             if self.current_logo_index < 0:
                 self.current_logo_index = len(self.logos) - 1
-        if (
+        elif (
             self.scene == "stageselect"
             and not down
             and self.controls_text2_rect.collidepoint(x, y)
@@ -641,15 +665,19 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             self.current_logo_index += 1
             if self.current_logo_index == len(self.logos):
                 self.current_logo_index = 0
-        if self.scene == "stageselect":
+        elif self.scene == "stageselect":
             self.stageselect_back.mouse_button(x, y, down)
+        elif self.scene == "levelsel":
+            self.levelsel_back.mouse_button(x, y, down)
 
     def handle_hover(self, x, y):
         if self.scene == "mainmenu":
             for v in self.mainmenu_buttons.values():
                 v.mouse_hover(x, y)
-        if self.scene == "stageselect":
+        elif self.scene == "stageselect":
             self.stageselect_back.mouse_hover(x, y)
+        elif self.scene == "levelsel":
+            self.levelsel_back.mouse_hover(x, y)
 
     def render_stageselect_frame(self):
         self.window.blit(self.logo_frames[self.current_logo_index], (0, 0))
@@ -664,16 +692,13 @@ Weakness: {nl+nl.join(info["weakness"])}"""
             ].render(self.window)
         self.stageselect_back.render(self.window)
 
+    def render_levelselect_frame(self):
+        self.levelsel_back.render(self.window)
+
     def render_mainmenu_frame(self):
         for v in self.mainmenu_buttons.values():
             v.render(self.window)
         self.window.blit(self.version_text, self.version_text_rect)
-
-    def handle_header_hover(self, x: int, y: int):
-        pass
-
-    def handle_header_mouse(self, x: int, y: int, down: bool):
-        pass
 
 
 def main():
