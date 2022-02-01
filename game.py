@@ -662,46 +662,34 @@ Weakness: {nl+nl.join(info["weakness"])}"""
         if self.scene == "mainmenu":
             for v in self.mainmenu_buttons.values():
                 v.mouse_button(x, y, down)
-        if (
-            self.scene == "stageselect"
-            and not down
-            and self.controls_text_rect.collidepoint(x, y)
-        ):
-            self.current_logo_index -= 1
-            if self.current_logo_index < 0:
-                self.current_logo_index = len(self.logos) - 1
-        if (
-            self.scene == "stageselect"
-            and not down
-            and self.controls_text2_rect.collidepoint(x, y)
-        ):
-            self.current_logo_index += 1
-            if self.current_logo_index == len(self.logos):
-                self.current_logo_index = 0
-        if (
-            self.scene == "stageselect"
-            and self.current_logo_index <= self.gamesave.unlock_level
-        ):
-            self.stageselect_enter.mouse_button(x, y, down)
-        if (
-            self.scene == "stageselect"
-            and self.current_logo_index <= self.gamesave.unlock_level
-            and self.logo_visible_bound_rect.collidepoint(x, y)
-        ):
-            self.scene = "levelsel"
-        if self.scene == "stageselect":
+        elif self.scene == "stageselect":
             self.stageselect_back.mouse_button(x, y, down)
-        if self.scene == "levelsel":
+            if (
+                self.current_logo_index <= self.gamesave.unlock_level
+                and self.logo_visible_bound_rect.collidepoint(x, y)
+            ):
+                self.scene = "levelsel"
+            if self.current_logo_index <= self.gamesave.unlock_level:
+                self.stageselect_enter.mouse_button(x, y, down)
+            if not down and self.controls_text_rect.collidepoint(x, y):
+                self.current_logo_index -= 1
+                if self.current_logo_index < 0:
+                    self.current_logo_index = len(self.logos) - 1
+            if not down and self.controls_text2_rect.collidepoint(x, y):
+                self.current_logo_index += 1
+                if self.current_logo_index == len(self.logos):
+                    self.current_logo_index = 0
+        elif self.scene == "levelsel":
             self.levelsel_back.mouse_button(x, y, down)
 
     def handle_hover(self, x, y):
         if self.scene == "mainmenu":
             for v in self.mainmenu_buttons.values():
                 v.mouse_hover(x, y)
-        if self.scene == "stageselect":
+        elif self.scene == "stageselect":
             self.stageselect_back.mouse_hover(x, y)
             self.stageselect_enter.mouse_hover(x, y)
-        if self.scene == "levelsel":
+        elif self.scene == "levelsel":
             self.levelsel_back.mouse_hover(x, y)
 
     def render_stageselect_frame(self):
