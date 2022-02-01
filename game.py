@@ -302,6 +302,7 @@ class Game:
                 "security-measures": ["Null"],
                 "isa": ["Base"],
                 "weakness": ["Buffer Overflow", "Fibinocci Password"],
+                "owner": "???",
             },  # Helios 1.0
             "dos": {
                 "company": "MicroSoft",
@@ -315,6 +316,7 @@ class Game:
                     "CipherBased Password",
                     "Disk Unencrypted",
                 ],
+                "owner": "???",
             },  # MS DOS
             "win95": {
                 "company": "MicroSoft",
@@ -329,6 +331,7 @@ class Game:
                     "No Limit Password",
                     "Disk Unencrypted",
                 ],
+                "owner": "Jeremy C.",
             },  # Windows 95
             "osx": {
                 "company": "Apple Inc.",
@@ -342,6 +345,7 @@ class Game:
                     "DualCore Race Condition",
                     "FBI Backdoor",
                 ],
+                "owner": "Quill's Macintosh",
             },  # OS X
             "windows": {
                 "company": "MicroSoft",
@@ -362,6 +366,7 @@ class Game:
                     "Scammers",
                     "Common Passwords",
                 ],
+                "owner": "Albert",
             },  # Windows 10
             "freebsd": {
                 "company": "Community",
@@ -385,6 +390,7 @@ class Game:
                     "SecureReg",
                 ],
                 "weakness": ["RegisterOverflow", "Log4j", "DDOS"],
+                "owner": "Server-CBF123D2",
             },  # FreeBSD 12
             "macos": {
                 "company": "Apple Inc.",
@@ -410,6 +416,7 @@ class Game:
                     "EFI Partition Mounted",
                     "Bootloader Debug Symbols",
                 ],
+                "owner": "Timmy's Mac",
             },  # MacOS BigSur
             "linux": {
                 "company": "Linux Foundation",
@@ -433,6 +440,7 @@ class Game:
                     "GPU",
                 ],
                 "weakness": ["SIGKILL", "Log4j", "Ram Overload", "HDD Swapfile"],
+                "owner": "Anonymous",
             },  # Linux 5.16
         }
         self.logo_visible_rect = pygame.Rect(
@@ -464,6 +472,13 @@ class Game:
             frame.blit(self.logos[i], self.logo_visible_rect)
             pygame.draw.rect(frame, (255, 255, 255), self.logo_visible_bound_rect, 1)
             info = x
+            owner = Label(
+                info["owner"],
+                self.text_renderer,
+                invis_width=self.width,
+                dest=(0, self.logo_visible_bound_rect.top - self.ppcm + 20),
+            )
+            owner.render(frame)
             nl = "\n\t* "
             info_to_show = f"""Company: {info["company"]}
 Release: {info["year"]}
